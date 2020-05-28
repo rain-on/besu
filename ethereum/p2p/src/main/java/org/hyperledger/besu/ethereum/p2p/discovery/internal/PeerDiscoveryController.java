@@ -458,6 +458,7 @@ public class PeerDiscoveryController {
                             .orElse(false);
                 interaction.updateFilter(newFilter);
 
+                LOG.info("SENDING PING for peer {}", peer.getId());
                 sendPacket(peer, pingPacket);
               });
         };
@@ -465,6 +466,7 @@ public class PeerDiscoveryController {
     // The filter condition will be updated as soon as the action is performed.
     final PeerInteractionState ping =
         new PeerInteractionState(action, peer.getId(), PacketType.PONG, (packet) -> false, true);
+    LOG.info("Dispatching PING interaction for peer {}", peer.getId());
     dispatchInteraction(peer, ping);
   }
 
@@ -627,7 +629,9 @@ public class PeerDiscoveryController {
      *     executed.
      */
     void execute(final long lastTimeout, final int retryCount) {
+      LOG.info("Pre Executing PeerInteraction for {}", this.peerId);
       action.accept(this);
+      LOG.info("Post Executing PeerInteraction for {}", this.peerId);
       if (retryable && retryCount < MAX_RETRIES) {
         final long newTimeout = retryDelayFunction.apply(lastTimeout);
         timerId =
