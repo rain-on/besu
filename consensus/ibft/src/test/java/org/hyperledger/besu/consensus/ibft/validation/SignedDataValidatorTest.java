@@ -20,6 +20,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.hyperledger.besu.consensus.common.bft.ConsensusRoundIdentifier;
+import org.hyperledger.besu.consensus.common.bft.ProposedBlockHelpers;
 import org.hyperledger.besu.consensus.ibft.TestHelpers;
 import org.hyperledger.besu.consensus.ibft.messagewrappers.Commit;
 import org.hyperledger.besu.consensus.ibft.messagewrappers.Prepare;
@@ -88,7 +89,7 @@ public class SignedDataValidatorTest {
 
   @Test
   public void receivingProposalMessageFromNonProposerFails() {
-    final Block block = TestHelpers.createProposalBlock(emptyList(), roundIdentifier);
+    final Block block = ProposedBlockHelpers.createProposalBlock(emptyList(), roundIdentifier);
     final Proposal proposalMsg =
         validatorMessageFactory.createProposal(roundIdentifier, block, Optional.empty());
 
