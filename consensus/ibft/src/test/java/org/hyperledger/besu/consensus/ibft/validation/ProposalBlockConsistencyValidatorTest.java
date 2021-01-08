@@ -21,7 +21,6 @@ import org.hyperledger.besu.consensus.common.bft.BftBlockInterface;
 import org.hyperledger.besu.consensus.common.bft.ConsensusRoundHelpers;
 import org.hyperledger.besu.consensus.common.bft.ConsensusRoundIdentifier;
 import org.hyperledger.besu.consensus.common.bft.ProposedBlockHelpers;
-import org.hyperledger.besu.consensus.ibft.TestHelpers;
 import org.hyperledger.besu.consensus.ibft.messagewrappers.Proposal;
 import org.hyperledger.besu.consensus.ibft.payload.MessageFactory;
 import org.hyperledger.besu.crypto.NodeKeyUtils;
@@ -65,20 +64,20 @@ public class ProposalBlockConsistencyValidatorTest {
             BftBlockHeaderFunctions.forCommittedSeal());
 
     assertThat(
-        consistencyChecker.validateProposalMatchesBlock(
-            proposalMsg.getSignedPayload(), misMatchedBlock))
+            consistencyChecker.validateProposalMatchesBlock(
+                proposalMsg.getSignedPayload(), misMatchedBlock))
         .isFalse();
   }
 
   @Test
   public void blockDigestMatchesButRoundDiffersFails() {
-    final ConsensusRoundIdentifier futureRound = ConsensusRoundHelpers
-        .createFrom(roundIdentifier, 0, +1);
+    final ConsensusRoundIdentifier futureRound =
+        ConsensusRoundHelpers.createFrom(roundIdentifier, 0, +1);
     final Proposal proposalMsg =
         proposerMessageFactory.createProposal(futureRound, block, Optional.empty());
 
     assertThat(
-        consistencyChecker.validateProposalMatchesBlock(proposalMsg.getSignedPayload(), block))
+            consistencyChecker.validateProposalMatchesBlock(proposalMsg.getSignedPayload(), block))
         .isFalse();
   }
 
@@ -90,7 +89,7 @@ public class ProposalBlockConsistencyValidatorTest {
         proposerMessageFactory.createProposal(futureHeight, block, Optional.empty());
 
     assertThat(
-        consistencyChecker.validateProposalMatchesBlock(proposalMsg.getSignedPayload(), block))
+            consistencyChecker.validateProposalMatchesBlock(proposalMsg.getSignedPayload(), block))
         .isFalse();
   }
 }

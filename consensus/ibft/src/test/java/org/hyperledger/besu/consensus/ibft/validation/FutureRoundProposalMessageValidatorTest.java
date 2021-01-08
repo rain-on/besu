@@ -23,7 +23,6 @@ import static org.mockito.Mockito.when;
 import org.hyperledger.besu.consensus.common.bft.ConsensusRoundHelpers;
 import org.hyperledger.besu.consensus.common.bft.ConsensusRoundIdentifier;
 import org.hyperledger.besu.consensus.common.bft.ProposedBlockHelpers;
-import org.hyperledger.besu.consensus.ibft.TestHelpers;
 import org.hyperledger.besu.consensus.ibft.messagewrappers.Proposal;
 import org.hyperledger.besu.consensus.ibft.payload.MessageFactory;
 import org.hyperledger.besu.crypto.NodeKeyUtils;
@@ -42,8 +41,8 @@ public class FutureRoundProposalMessageValidatorTest {
 
   private final MessageFactory messageFactoy = new MessageFactory(NodeKeyUtils.generate());
   private final ConsensusRoundIdentifier roundIdentifier = new ConsensusRoundIdentifier(1, 1);
-  private final Block proposedBlock = ProposedBlockHelpers
-      .createProposalBlock(emptyList(), roundIdentifier);
+  private final Block proposedBlock =
+      ProposedBlockHelpers.createProposalBlock(emptyList(), roundIdentifier);
 
   private FutureRoundProposalMessageValidator validator;
 

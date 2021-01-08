@@ -15,6 +15,7 @@
 package org.hyperledger.besu.consensus.qbft.statemachine;
 
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static java.util.Optional.empty;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hyperledger.besu.consensus.common.bft.BftContextBuilder.setupContextWithValidators;
@@ -28,13 +29,17 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import org.hyperledger.besu.consensus.common.bft.BftBlockHashing;
 import org.hyperledger.besu.consensus.common.bft.BftExtraData;
 import org.hyperledger.besu.consensus.common.bft.ConsensusRoundIdentifier;
 import org.hyperledger.besu.consensus.common.bft.RoundTimer;
 import org.hyperledger.besu.consensus.common.bft.blockcreation.BftBlockCreator;
+import org.hyperledger.besu.consensus.common.bft.payload.SignedData;
+import org.hyperledger.besu.consensus.qbft.messagewrappers.RoundChange;
 import org.hyperledger.besu.consensus.qbft.network.QbftMessageTransmitter;
 import org.hyperledger.besu.consensus.qbft.payload.MessageFactory;
+import org.hyperledger.besu.consensus.qbft.payload.PreparePayload;
 import org.hyperledger.besu.consensus.qbft.payload.PreparedCertificate;
 import org.hyperledger.besu.consensus.qbft.payload.RoundChangeMetadata;
 import org.hyperledger.besu.consensus.qbft.validation.MessageValidator;
@@ -159,8 +164,8 @@ public class QbftRoundTest {
             roundTimer);
 
     round.handleProposalMessage(
-        messageFactory.createProposal(roundIdentifier, proposedBlock, Collections.emptyList(),
-            Collections.emptyList()));
+        messageFactory.createProposal(
+            roundIdentifier, proposedBlock, Collections.emptyList(), Collections.emptyList()));
     verify(transmitter, times(1)).multicastPrepare(roundIdentifier, proposedBlock.getHash());
     verify(transmitter, never()).multicastCommit(any(), any(), any());
   }
@@ -182,8 +187,8 @@ public class QbftRoundTest {
 
     round.createAndSendProposalMessage(15);
     verify(transmitter, times(1))
-        .multicastProposal(roundIdentifier, proposedBlock, Collections.emptyList(),
-            Collections.emptyList());
+        .multicastProposal(
+            roundIdentifier, proposedBlock, Collections.emptyList(), Collections.emptyList());
     verify(transmitter, never()).multicastPrepare(any(), any());
     verify(transmitter, never()).multicastCommit(any(), any(), any());
   }
@@ -204,8 +209,8 @@ public class QbftRoundTest {
             roundTimer);
     round.createAndSendProposalMessage(15);
     verify(transmitter, times(1))
-        .multicastProposal(roundIdentifier, proposedBlock, Collections.emptyList(),
-            Collections.emptyList());
+        .multicastProposal(
+            roundIdentifier, proposedBlock, Collections.emptyList(), Collections.emptyList());
     verify(transmitter, never()).multicastPrepare(any(), any());
     verify(transmitter, times(1)).multicastCommit(any(), any(), any());
     verify(blockImporter, times(1)).importBlock(any(), any(), any());
@@ -233,8 +238,8 @@ public class QbftRoundTest {
 
     // Receive Proposal Message
     round.handleProposalMessage(
-        messageFactory.createProposal(roundIdentifier, proposedBlock, Collections.emptyList(),
-            Collections.emptyList()));
+        messageFactory.createProposal(
+            roundIdentifier, proposedBlock, Collections.emptyList(), Collections.emptyList()));
     verify(transmitter, times(1)).multicastPrepare(roundIdentifier, proposedBlock.getHash());
     verify(transmitter, times(1))
         .multicastCommit(roundIdentifier, proposedBlock.getHash(), localCommitSeal);
@@ -327,20 +332,21 @@ public class QbftRoundTest {
             transmitter,
             roundTimer);
 
-    final RoundChangeMetadata roundChangeMetadata = RoundChangeMetadata.create(
-            Collections.singletonList(
-                messageFactory.createRoundChange(
-                    roundIdentifier,
-                    Optional.of(new PreparedCertificate(proposedBlock, emptyList())))));
+    final SignedData<PreparePayload> preparedPayload = messageFactory
+        .createPrepare(priorRoundChange, proposedBlock.getHash())
+        .getSignedPayload();
 
-    // NOTE: QbftRound assumes the prepare's are valid
+    final RoundChange roundChange = messageFactory.createRoundChange(
+        roundIdentifier,
+        Optional.of(new PreparedCertificate(proposedBlock, singletonList(preparedPayload))));
+
+    final RoundChangeMetadata roundChangeMetadata =
+        RoundChangeMetadata.create(singletonList(roundChange));
 
     round.startRoundWith(roundChangeMetadata, 15);
     verify(transmitter, times(1))
         .multicastProposal(
-            eq(roundIdentifier),
-            blockCaptor.capture(),
-            eq(emptyList()), eq(emptyList()));
+            eq(roundIdentifier), blockCaptor.capture(), eq(singletonList(roundChange.getSignedPayload())), eq(singletonList(preparedPayload)));
 
     final BftExtraData proposedExtraData = BftExtraData.decode(blockCaptor.getValue().getHeader());
     assertThat(proposedExtraData.getRound()).isEqualTo(roundIdentifier.getRoundNumber());
@@ -367,16 +373,20 @@ public class QbftRoundTest {
             transmitter,
             roundTimer);
 
+    final RoundChange roundChange = messageFactory.createRoundChange(
+        roundIdentifier,
+        Optional.empty());
+
+
     final RoundChangeMetadata roundChangeMetadata =
-        RoundChangeMetadata.create(
-            Collections.singletonList(messageFactory.createRoundChange(roundIdentifier, empty())));
+        RoundChangeMetadata.create(List.of(roundChange));
 
     round.startRoundWith(roundChangeMetadata, 15);
     verify(transmitter, times(1))
         .multicastProposal(
             eq(roundIdentifier),
             blockCaptor.capture(),
-            eq(Collections.emptyList()),
+            eq(List.of(roundChange.getSignedPayload())),
             eq(Collections.emptyList()));
 
     // Inject a single Prepare message, and confirm the roundState has gone to Prepared (which
@@ -425,8 +435,8 @@ public class QbftRoundTest {
         messageFactory.createCommit(roundIdentifier, proposedBlock.getHash(), remoteCommitSeal));
 
     round.handleProposalMessage(
-        messageFactory.createProposal(roundIdentifier, proposedBlock, Collections.emptyList(),
-            Collections.emptyList()));
+        messageFactory.createProposal(
+            roundIdentifier, proposedBlock, Collections.emptyList(), Collections.emptyList()));
 
     verify(blockImporter, times(1)).importBlock(any(), any(), any());
   }
@@ -451,8 +461,8 @@ public class QbftRoundTest {
         messageFactory.createCommit(roundIdentifier, proposedBlock.getHash(), remoteCommitSeal));
 
     round.handleProposalMessage(
-        messageFactory.createProposal(roundIdentifier, proposedBlock, Collections.emptyList(),
-            Collections.emptyList()));
+        messageFactory.createProposal(
+            roundIdentifier, proposedBlock, Collections.emptyList(), Collections.emptyList()));
 
     verify(blockImporter, times(1)).importBlock(any(), any(), any());
   }
@@ -478,16 +488,11 @@ public class QbftRoundTest {
             roundTimer);
 
     round.handleProposalMessage(
-        messageFactory.createProposal(roundIdentifier, proposedBlock, Collections.emptyList(),
-            Collections.emptyList()));
+        messageFactory.createProposal(
+            roundIdentifier, proposedBlock, Collections.emptyList(), Collections.emptyList()));
 
     // Verify that no prepare message was constructed by the QbftRound
-    assertThat(
-        roundState
-            .constructPreparedRoundCertificate()
-            .get()
-            .getPrepares())
-        .isEmpty();
+    assertThat(roundState.constructPreparedRoundCertificate().get().getPrepares()).isEmpty();
 
     verifyNoInteractions(transmitter);
   }

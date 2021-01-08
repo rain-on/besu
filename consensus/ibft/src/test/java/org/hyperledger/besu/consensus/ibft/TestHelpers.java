@@ -16,7 +16,6 @@ package org.hyperledger.besu.consensus.ibft;
 
 import static java.util.Collections.singletonList;
 
-import java.util.Optional;
 import org.hyperledger.besu.consensus.common.bft.ConsensusRoundIdentifier;
 import org.hyperledger.besu.consensus.common.bft.ProposedBlockHelpers;
 import org.hyperledger.besu.consensus.ibft.messagewrappers.Proposal;
@@ -25,6 +24,8 @@ import org.hyperledger.besu.consensus.ibft.payload.MessageFactory;
 import org.hyperledger.besu.crypto.NodeKey;
 import org.hyperledger.besu.ethereum.core.AddressHelpers;
 import org.hyperledger.besu.ethereum.core.Block;
+
+import java.util.Optional;
 
 public class TestHelpers {
 
@@ -37,8 +38,9 @@ public class TestHelpers {
     final MessageFactory messageFactory = new MessageFactory(signerNodeKey);
     final ConsensusRoundIdentifier roundIdentifier =
         new ConsensusRoundIdentifier(0x1234567890ABCDEFL, round);
-    final Block block = ProposedBlockHelpers
-        .createProposalBlock(singletonList(AddressHelpers.ofValue(1)), roundIdentifier);
+    final Block block =
+        ProposedBlockHelpers.createProposalBlock(
+            singletonList(AddressHelpers.ofValue(1)), roundIdentifier);
     return messageFactory.createProposal(roundIdentifier, block, Optional.empty());
   }
 

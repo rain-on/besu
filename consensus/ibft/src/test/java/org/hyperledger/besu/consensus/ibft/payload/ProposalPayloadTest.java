@@ -19,7 +19,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.hyperledger.besu.consensus.common.bft.ConsensusRoundIdentifier;
 import org.hyperledger.besu.consensus.common.bft.ProposedBlockHelpers;
-import org.hyperledger.besu.consensus.ibft.TestHelpers;
 import org.hyperledger.besu.consensus.ibft.messagedata.IbftV2;
 import org.hyperledger.besu.ethereum.core.AddressHelpers;
 import org.hyperledger.besu.ethereum.core.Block;
@@ -37,8 +36,8 @@ public class ProposalPayloadTest {
   @Test
   public void roundTripRlp() {
     final Block block =
-        ProposedBlockHelpers
-            .createProposalBlock(singletonList(AddressHelpers.ofValue(1)), ROUND_IDENTIFIER);
+        ProposedBlockHelpers.createProposalBlock(
+            singletonList(AddressHelpers.ofValue(1)), ROUND_IDENTIFIER);
     final ProposalPayload expectedProposalPayload =
         new ProposalPayload(ROUND_IDENTIFIER, block.getHash());
     final BytesValueRLPOutput rlpOut = new BytesValueRLPOutput();

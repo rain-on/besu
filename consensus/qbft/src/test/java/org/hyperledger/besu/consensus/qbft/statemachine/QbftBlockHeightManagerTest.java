@@ -45,7 +45,6 @@ import org.hyperledger.besu.consensus.qbft.messagewrappers.Proposal;
 import org.hyperledger.besu.consensus.qbft.messagewrappers.RoundChange;
 import org.hyperledger.besu.consensus.qbft.network.QbftMessageTransmitter;
 import org.hyperledger.besu.consensus.qbft.payload.MessageFactory;
-import org.hyperledger.besu.consensus.qbft.payload.PreparedCertificate;
 import org.hyperledger.besu.consensus.qbft.payload.RoundChangeMetadata;
 import org.hyperledger.besu.consensus.qbft.validation.FutureRoundProposalMessageValidator;
 import org.hyperledger.besu.consensus.qbft.validation.MessageValidator;
@@ -67,7 +66,6 @@ import org.hyperledger.besu.util.Subscribers;
 
 import java.math.BigInteger;
 import java.time.Clock;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -213,7 +211,8 @@ public class QbftBlockHeightManagerTest {
             messageFactory);
 
     manager.handleBlockTimerExpiry(roundIdentifier);
-    verify(messageTransmitter, times(1)).multicastProposal(eq(roundIdentifier), any(), any());
+    verify(messageTransmitter, times(1))
+        .multicastProposal(eq(roundIdentifier), any(), any(), any());
     verify(messageTransmitter, never()).multicastPrepare(any(), any());
     verify(messageTransmitter, never()).multicastPrepare(any(), any());
   }
@@ -268,7 +267,7 @@ public class QbftBlockHeightManagerTest {
     final RoundChange roundChange =
         messageFactory.createRoundChange(futureRoundIdentifier, Optional.empty());
     final RoundChangeMetadata roundChangMetadata =
-        new RoundChangeMetadata(singletonList(roundChange.getSignedPayload()));
+        RoundChangeMetadata.create(singletonList(roundChange));
 
     when(roundChangeManager.appendRoundChangeMessage(any()))
         .thenReturn(Optional.of(singletonList(roundChange)));
@@ -288,7 +287,11 @@ public class QbftBlockHeightManagerTest {
     manager.handleRoundChangePayload(roundChange);
 
     verify(messageTransmitter, times(1))
-        .multicastProposal(eq(futureRoundIdentifier), any(), eq(Optional.of(roundChangMetadata)));
+        .multicastProposal(
+            eq(futureRoundIdentifier),
+            any(),
+            eq(roundChangMetadata.getRoundChangePayloads()),
+            eq(roundChangMetadata.getPrepares()));
   }
 
   @Test
@@ -323,9 +326,7 @@ public class QbftBlockHeightManagerTest {
     // Force a new round to be started at new round number.
     final Proposal futureRoundProposal =
         messageFactory.createProposal(
-            futureRoundIdentifier,
-            createdBlock,
-            Optional.of(new RoundChangeMetadata(Collections.emptyList())));
+            futureRoundIdentifier, createdBlock, emptyList(), emptyList());
 
     manager.handleProposalPayload(futureRoundProposal);
 
@@ -367,10 +368,11 @@ public class QbftBlockHeightManagerTest {
     assertThat(capturedMessageData).isInstanceOf(RoundChangeMessageData.class);
     final RoundChangeMessageData roundChange = (RoundChangeMessageData) capturedMessageData;
 
-    Optional<PreparedCertificate> preparedCert = roundChange.decode().getPreparedCertificate();
-    Assertions.assertThat(preparedCert).isNotEmpty();
+    final RoundChange receivedRoundChange = roundChange.decode();
 
-    assertThat(preparedCert.get().getPreparePayloads())
+    Assertions.assertThat(receivedRoundChange.getPreparedRoundMetadata()).isNotEmpty();
+
+    assertThat(receivedRoundChange.getPrepares())
         .containsOnly(firstPrepare.getSignedPayload(), secondPrepare.getSignedPayload());
   }
 
@@ -393,9 +395,7 @@ public class QbftBlockHeightManagerTest {
     // Force a new round to be started at new round number.
     final Proposal futureRoundProposal =
         messageFactory.createProposal(
-            futureRoundIdentifier,
-            createdBlock,
-            Optional.of(new RoundChangeMetadata(Collections.emptyList())));
+            futureRoundIdentifier, createdBlock, emptyList(), emptyList());
     reset(roundFactory); // Discard the existing createNewRound invocation.
 
     manager.handleProposalPayload(futureRoundProposal);

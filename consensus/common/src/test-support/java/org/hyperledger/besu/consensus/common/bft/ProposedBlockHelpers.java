@@ -14,14 +14,16 @@
  */
 package org.hyperledger.besu.consensus.common.bft;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import org.apache.tuweni.bytes.Bytes;
 import org.hyperledger.besu.ethereum.core.Address;
 import org.hyperledger.besu.ethereum.core.Block;
 import org.hyperledger.besu.ethereum.core.BlockDataGenerator;
 import org.hyperledger.besu.ethereum.core.BlockDataGenerator.BlockOptions;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+
+import org.apache.tuweni.bytes.Bytes;
 
 public class ProposedBlockHelpers {
 
@@ -29,11 +31,11 @@ public class ProposedBlockHelpers {
       final List<Address> validators, final ConsensusRoundIdentifier roundId) {
     final Bytes extraData =
         new BftExtraData(
-            Bytes.wrap(new byte[32]),
-            Collections.emptyList(),
-            Optional.empty(),
-            roundId.getRoundNumber(),
-            validators)
+                Bytes.wrap(new byte[32]),
+                Collections.emptyList(),
+                Optional.empty(),
+                roundId.getRoundNumber(),
+                validators)
             .encode();
     final BlockOptions blockOptions =
         BlockOptions.create()
@@ -42,5 +44,4 @@ public class ProposedBlockHelpers {
             .setBlockHeaderFunctions(BftBlockHeaderFunctions.forCommittedSeal());
     return new BlockDataGenerator().block(blockOptions);
   }
-
 }

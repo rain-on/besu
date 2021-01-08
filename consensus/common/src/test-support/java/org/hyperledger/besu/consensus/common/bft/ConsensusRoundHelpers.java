@@ -21,5 +21,4 @@ public class ConsensusRoundHelpers {
     return new ConsensusRoundIdentifier(
         initial.getSequenceNumber() + offSetSequence, initial.getRoundNumber() + offSetRound);
   }
-
 }

@@ -24,7 +24,6 @@ import static org.mockito.Mockito.when;
 import org.hyperledger.besu.consensus.common.bft.ConsensusRoundHelpers;
 import org.hyperledger.besu.consensus.common.bft.ConsensusRoundIdentifier;
 import org.hyperledger.besu.consensus.common.bft.ProposedBlockHelpers;
-import org.hyperledger.besu.consensus.ibft.TestHelpers;
 import org.hyperledger.besu.consensus.ibft.messagewrappers.Proposal;
 import org.hyperledger.besu.consensus.ibft.payload.MessageFactory;
 import org.hyperledger.besu.consensus.ibft.payload.PreparedCertificate;
@@ -88,8 +87,8 @@ public class RoundChangeCertificateValidatorTest {
 
   @Test
   public void roundChangeMessagesDoNotAllTargetRoundFails() {
-    final ConsensusRoundIdentifier prevRound = ConsensusRoundHelpers
-        .createFrom(roundIdentifier, 0, -1);
+    final ConsensusRoundIdentifier prevRound =
+        ConsensusRoundHelpers.createFrom(roundIdentifier, 0, -1);
 
     final RoundChangeCertificate.Builder roundChangeBuilder = new RoundChangeCertificate.Builder();
     roundChangeBuilder.appendRoundChangeMessage(
@@ -105,7 +104,8 @@ public class RoundChangeCertificateValidatorTest {
 
   @Test
   public void invalidPrepareMessageInOnePrepareCertificateFails() {
-    final ConsensusRoundIdentifier prevRound = ConsensusRoundHelpers.createFrom(roundIdentifier, 0, -1);
+    final ConsensusRoundIdentifier prevRound =
+        ConsensusRoundHelpers.createFrom(roundIdentifier, 0, -1);
 
     final RoundChangeCertificate.Builder roundChangeBuilder = new RoundChangeCertificate.Builder();
     roundChangeBuilder.appendRoundChangeMessage(
@@ -129,7 +129,8 @@ public class RoundChangeCertificateValidatorTest {
 
   @Test
   public void detectsTheSuppliedBlockIsNotInLatestPrepareCertificate() {
-    final ConsensusRoundIdentifier preparedRound = ConsensusRoundHelpers.createFrom(roundIdentifier, 0, -1);
+    final ConsensusRoundIdentifier preparedRound =
+        ConsensusRoundHelpers.createFrom(roundIdentifier, 0, -1);
     // The previous proposedBlock has been constructed with less validators, so is thus not
     // identical
     // to the proposedBlock in the new proposal (so should fail).
@@ -159,7 +160,8 @@ public class RoundChangeCertificateValidatorTest {
   public void correctlyMatchesBlockAgainstLatestInRoundChangeCertificate() {
     final ConsensusRoundIdentifier latterPrepareRound =
         ConsensusRoundHelpers.createFrom(roundIdentifier, 0, -1);
-    final Block latterBlock = ProposedBlockHelpers.createProposalBlock(validators, latterPrepareRound);
+    final Block latterBlock =
+        ProposedBlockHelpers.createProposalBlock(validators, latterPrepareRound);
     final Proposal latterProposal =
         proposerMessageFactory.createProposal(latterPrepareRound, latterBlock, empty());
     final Optional<PreparedRoundArtifacts> latterTerminatedRoundArtefacts =
@@ -239,7 +241,8 @@ public class RoundChangeCertificateValidatorTest {
     when(proposedBlock.getHash()).thenReturn(Hash.fromHexStringLenient("1"));
     final ConsensusRoundIdentifier roundIdentifier = new ConsensusRoundIdentifier(1, 4);
 
-    final ConsensusRoundIdentifier preparedRound = ConsensusRoundHelpers.createFrom(roundIdentifier, 0, -1);
+    final ConsensusRoundIdentifier preparedRound =
+        ConsensusRoundHelpers.createFrom(roundIdentifier, 0, -1);
     final Proposal differentProposal =
         proposerMessageFactory.createProposal(preparedRound, proposedBlock, Optional.empty());
 
