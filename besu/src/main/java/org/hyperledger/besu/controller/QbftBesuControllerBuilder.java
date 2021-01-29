@@ -36,9 +36,9 @@ import org.hyperledger.besu.consensus.common.bft.EventMultiplexer;
 import org.hyperledger.besu.consensus.common.bft.MessageTracker;
 import org.hyperledger.besu.consensus.common.bft.RoundTimer;
 import org.hyperledger.besu.consensus.common.bft.UniqueMessageMulticaster;
+import org.hyperledger.besu.consensus.common.bft.blockcreation.BftBaseProposerSelector;
 import org.hyperledger.besu.consensus.common.bft.blockcreation.BftBlockCreatorFactory;
 import org.hyperledger.besu.consensus.common.bft.blockcreation.BftMiningCoordinator;
-import org.hyperledger.besu.consensus.common.bft.blockcreation.ProposerSelector;
 import org.hyperledger.besu.consensus.common.bft.network.ValidatorPeers;
 import org.hyperledger.besu.consensus.common.bft.protocol.BftProtocolManager;
 import org.hyperledger.besu.consensus.common.bft.statemachine.BftEventHandler;
@@ -47,6 +47,7 @@ import org.hyperledger.besu.consensus.common.bft.statemachine.FutureMessageBuffe
 import org.hyperledger.besu.consensus.common.jsonrpc.BftJsonRpcMethods;
 import org.hyperledger.besu.consensus.common.jsonrpc.BftRpcApis;
 import org.hyperledger.besu.consensus.qbft.QbftGossip;
+import org.hyperledger.besu.consensus.qbft.blockcreation.QbftProposerSelector;
 import org.hyperledger.besu.consensus.qbft.payload.MessageFactory;
 import org.hyperledger.besu.consensus.qbft.protocol.QbftSubProtocol;
 import org.hyperledger.besu.consensus.qbft.statemachine.QbftBlockHeightManagerFactory;
@@ -136,8 +137,8 @@ public class QbftBesuControllerBuilder extends BesuControllerBuilder {
     final VoteTallyCache voteTallyCache =
         protocolContext.getConsensusState(BftContext.class).getVoteTallyCache();
 
-    final ProposerSelector proposerSelector =
-        new ProposerSelector(blockchain, blockInterface, true, voteTallyCache);
+    final BftBaseProposerSelector bftProposerSelector =
+        new QbftProposerSelector(blockchain, voteTallyCache);
 
     // NOTE: peers should not be used for accessing the network as it does not enforce the
     // "only send once" filter applied by the UniqueMessageMulticaster.
@@ -153,7 +154,7 @@ public class QbftBesuControllerBuilder extends BesuControllerBuilder {
             voteTallyCache,
             nodeKey,
             Util.publicKeyToAddress(nodeKey.getPublicKey()),
-            proposerSelector,
+            bftProposerSelector,
             uniqueMessageMulticaster,
             new RoundTimer(bftEventQueue, bftConfig.getRequestTimeoutSeconds(), bftExecutors),
             new BlockTimer(bftEventQueue, bftConfig.getBlockPeriodSeconds(), bftExecutors, clock),
@@ -161,7 +162,7 @@ public class QbftBesuControllerBuilder extends BesuControllerBuilder {
             clock);
 
     final MessageValidatorFactory messageValidatorFactory =
-        new MessageValidatorFactory(proposerSelector, protocolSchedule, protocolContext);
+        new MessageValidatorFactory(bftProposerSelector, protocolSchedule, protocolContext);
 
     final Subscribers<MinedBlockObserver> minedBlockObservers = Subscribers.create();
     minedBlockObservers.subscribe(ethProtocolManager);

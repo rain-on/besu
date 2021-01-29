@@ -31,7 +31,7 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
-public class CliqueProposerSelectorTest {
+public class CliqueBftProposerSelectorTest {
 
   private final List<Address> validatorList =
       Arrays.asList(

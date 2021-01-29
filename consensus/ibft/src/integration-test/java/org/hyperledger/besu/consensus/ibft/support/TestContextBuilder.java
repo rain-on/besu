@@ -41,7 +41,7 @@ import org.hyperledger.besu.consensus.common.bft.RoundTimer;
 import org.hyperledger.besu.consensus.common.bft.SynchronizerUpdater;
 import org.hyperledger.besu.consensus.common.bft.UniqueMessageMulticaster;
 import org.hyperledger.besu.consensus.common.bft.blockcreation.BftBlockCreatorFactory;
-import org.hyperledger.besu.consensus.common.bft.blockcreation.ProposerSelector;
+import org.hyperledger.besu.consensus.common.bft.blockcreation.BftProposerSelector;
 import org.hyperledger.besu.consensus.common.bft.inttest.DefaultValidatorPeer;
 import org.hyperledger.besu.consensus.common.bft.inttest.NetworkLayout;
 import org.hyperledger.besu.consensus.common.bft.inttest.NodeParams;
@@ -333,8 +333,8 @@ public class TestContextBuilder {
             localAddress,
             localAddress);
 
-    final ProposerSelector proposerSelector =
-        new ProposerSelector(blockChain, blockInterface, true, voteTallyCache);
+    final BftProposerSelector bftProposerSelector =
+        new BftProposerSelector(blockChain, blockInterface, true, voteTallyCache);
 
     final BftExecutors bftExecutors = BftExecutors.create(new NoOpMetricsSystem());
     final BftFinalState finalState =
@@ -342,7 +342,7 @@ public class TestContextBuilder {
             protocolContext.getConsensusState(BftContext.class).getVoteTallyCache(),
             nodeKey,
             Util.publicKeyToAddress(nodeKey.getPublicKey()),
-            proposerSelector,
+            bftProposerSelector,
             multicaster,
             new RoundTimer(bftEventQueue, ROUND_TIMER_SEC * 1000, bftExecutors),
             new BlockTimer(bftEventQueue, BLOCK_TIMER_SEC * 1000, bftExecutors, TestClock.fixed()),
@@ -352,7 +352,7 @@ public class TestContextBuilder {
     final MessageFactory messageFactory = new MessageFactory(nodeKey);
 
     final MessageValidatorFactory messageValidatorFactory =
-        new MessageValidatorFactory(proposerSelector, protocolSchedule, protocolContext);
+        new MessageValidatorFactory(bftProposerSelector, protocolSchedule, protocolContext);
 
     final Subscribers<MinedBlockObserver> minedBlockObservers = Subscribers.create();
 

@@ -60,11 +60,11 @@ dependencies {
   testImplementation project(':testutil')
   testImplementation project(':crypto')
 
-  integrationTestImplementation project(path: ':crypto', configuration: 'testSupportArtifacts')
-  integrationTestImplementation project(path: ':consensus:common', configuration: 'testSupportArtifacts')
+  integrationTestImplementation project(':besu')
   integrationTestImplementation project(':metrics:core')
   integrationTestImplementation project(':testutil')
-
+  integrationTestImplementation project(path: ':crypto', configuration: 'testSupportArtifacts')
+  integrationTestImplementation project(path: ':consensus:common', configuration: 'testSupportArtifacts')
   integrationTestImplementation 'junit:junit'
   integrationTestImplementation 'org.assertj:assertj-core'
   integrationTestImplementation 'org.mockito:mockito-core'

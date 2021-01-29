@@ -43,7 +43,7 @@ import org.apache.logging.log4j.Logger;
  * ValidatorProvider}), such that each new round for the given height is serviced by a different
  * validator.
  */
-public class ProposerSelector {
+public class BftProposerSelector implements BftBaseProposerSelector {
 
   private static final Logger LOG = LogManager.getLogger();
 
@@ -59,7 +59,7 @@ public class ProposerSelector {
 
   private final BlockInterface blockInterface;
 
-  public ProposerSelector(
+  public BftProposerSelector(
       final Blockchain blockchain,
       final BlockInterface blockInterface,
       final boolean changeEachBlock,
@@ -76,6 +76,7 @@ public class ProposerSelector {
    * @param roundIdentifier Identifies the chain height and proposal attempt number.
    * @return The address of the node which is to propose a block for the provided Round.
    */
+  @Override
   public Address selectProposerForRound(final ConsensusRoundIdentifier roundIdentifier) {
     checkArgument(roundIdentifier.getRoundNumber() >= 0);
     checkArgument(roundIdentifier.getSequenceNumber() > 0);
