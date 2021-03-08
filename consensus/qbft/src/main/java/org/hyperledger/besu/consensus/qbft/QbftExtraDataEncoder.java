@@ -86,7 +86,7 @@ public class QbftExtraDataEncoder implements BftExtraDataEncoder {
     } else {
       vote = Optional.of(Vote.readFrom(rlpInput));
     }
-    final int round = rlpInput.readInt();
+    final int round = rlpInput.readIntScalar();
     final List<SECPSignature> seals =
         rlpInput.readList(
             rlp -> SignatureAlgorithmFactory.getInstance().decodeSignature(rlp.readBytes()));
@@ -122,7 +122,7 @@ public class QbftExtraDataEncoder implements BftExtraDataEncoder {
     }
 
     if (encodingType != EncodingType.EXCLUDE_COMMIT_SEALS_AND_ROUND_NUMBER) {
-      encoder.writeInt(bftExtraData.getRound());
+      encoder.writeIntScalar(bftExtraData.getRound());
       if (encodingType != EncodingType.EXCLUDE_COMMIT_SEALS) {
         encoder.writeList(
             bftExtraData.getSeals(), (committer, rlp) -> rlp.writeBytes(committer.encodedBytes()));
