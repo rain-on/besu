@@ -47,12 +47,12 @@ public class QbftExtraDataEncoderTest {
       Suppliers.memoize(SignatureAlgorithmFactory::getInstance);
 
   private final String RAW_HEX_ENCODING_STRING =
-      "0xf8f0a00102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20ea940000000000000000"
-          + "000000000000000000000001940000000000000000000000000000000000000002d7940000000000000000"
-          + "00000000000000000000000181ff83fedcbaf886b841000000000000000000000000000000000000000000"
-          + "0000000000000000000001000000000000000000000000000000000000000000000000000000000000000a"
-          + "00b841000000000000000000000000000000000000000000000000000000000000000a0000000000000000"
-          + "00000000000000000000000000000000000000000000000100";
+      "0xf8f1a00102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20ea940000000000000000"
+          + "000000000000000000000001940000000000000000000000000000000000000002d8d79400000000000000"
+          + "0000000000000000000000000181ff83fedcbaf886b8410000000000000000000000000000000000000000"
+          + "00000000000000000000000100000000000000000000000000000000000000000000000000000000000000"
+          + "0a00b841000000000000000000000000000000000000000000000000000000000000000a00000000000000"
+          + "0000000000000000000000000000000000000000000000000100";
 
   private final BftExtraData DECODED_EXTRA_DATA_FOR_RAW_HEX_ENCODING_STRING =
       getDecodedExtraDataForRawHexEncodingString();
@@ -93,7 +93,7 @@ public class QbftExtraDataEncoderTest {
     encoder.writeList(validators, (validator, rlp) -> rlp.writeBytes(validator));
 
     // encoded vote
-    vote.get().writeTo(encoder);
+    encoder.writeList(List.of(vote), (v, rlp) -> v.get().writeTo(rlp));
 
     // This is to verify that the decoding works correctly when the round is encoded as non-fixed
     // length bytes
@@ -163,7 +163,7 @@ public class QbftExtraDataEncoderTest {
     encoder.writeList(validators, (validator, rlp) -> rlp.writeBytes(validator));
 
     // encode an empty vote
-    encoder.writeNull();
+    encoder.writeList(List.of(), (v, r) -> {});
 
     encoder.writeIntScalar(round);
     encoder.writeList(committerSeals, (committer, rlp) -> rlp.writeBytes(committer.encodedBytes()));
@@ -218,7 +218,7 @@ public class QbftExtraDataEncoderTest {
     encoder.writeList(validators, (validator, rlp) -> rlp.writeBytes(validator));
 
     // encoded vote
-    vote.get().writeTo(encoder);
+    encoder.writeList(List.of(vote), (v, rlpOutput) -> v.get().writeTo(rlpOutput));
 
     encoder.writeIntScalar(round);
     encoder.writeList(committerSeals, (committer, rlp) -> rlp.writeBytes(committer.encodedBytes()));
@@ -277,8 +277,11 @@ public class QbftExtraDataEncoderTest {
 
     // encoded vote
     encoder.startList();
+    // each vote is also a list of vote components
+    encoder.startList();
     encoder.writeBytes(Address.fromHexString("1"));
     encoder.writeByte(Vote.ADD_BYTE_VALUE);
+    encoder.endList();
     encoder.endList();
 
     encoder.writeIntScalar(round);
@@ -361,7 +364,7 @@ public class QbftExtraDataEncoderTest {
     encoder.writeList(validators, (validator, rlp) -> rlp.writeBytes(validator));
 
     // encoded vote
-    vote.get().writeTo(encoder);
+    encoder.writeList(List.of(vote), (v, rlpOutput) -> v.get().writeTo(rlpOutput));
 
     encoder.writeIntScalar(round);
     encoder.endList();
@@ -376,7 +379,7 @@ public class QbftExtraDataEncoderTest {
   }
 
   @Test
-  public void extraDataCanBeEncodedwithoutCommitSealsOrRoundNumber() {
+  public void extraDataCanBeEncodedWithoutCommitSealsOrRoundNumber() {
     final List<Address> validators =
         Arrays.asList(Address.fromHexString("1"), Address.fromHexString("2"));
     final Optional<Vote> vote = Optional.of(Vote.authVote(Address.fromHexString("1")));
@@ -396,7 +399,7 @@ public class QbftExtraDataEncoderTest {
     encoder.writeList(validators, (validator, rlp) -> rlp.writeBytes(validator));
 
     // encoded vote
-    vote.get().writeTo(encoder);
+    encoder.writeList(List.of(vote), (v, rlp) -> v.get().writeTo(rlp));
 
     encoder.endList();
 

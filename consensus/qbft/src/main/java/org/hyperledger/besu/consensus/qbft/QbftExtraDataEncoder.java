@@ -29,6 +29,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -79,13 +80,10 @@ public class QbftExtraDataEncoder implements BftExtraDataEncoder {
     rlpInput.enterList(); // This accounts for the "root node" which contains BFT data items.
     final Bytes vanityData = rlpInput.readBytes();
     final List<Address> validators = rlpInput.readList(Address::readFrom);
-    final Optional<Vote> vote;
-    if (rlpInput.nextIsNull()) {
-      vote = Optional.empty();
-      rlpInput.skipNext();
-    } else {
-      vote = Optional.of(Vote.readFrom(rlpInput));
-    }
+
+    final List<Vote> votes = rlpInput.readList(Vote::readFrom);
+    final Optional<Vote> vote = votes.isEmpty() ? Optional.empty() : Optional.of(votes.get(0));
+
     final int round = rlpInput.readIntScalar();
     final List<SECPSignature> seals =
         rlpInput.readList(
@@ -115,11 +113,9 @@ public class QbftExtraDataEncoder implements BftExtraDataEncoder {
     encoder.startList();
     encoder.writeBytes(bftExtraData.getVanityData());
     encoder.writeList(bftExtraData.getValidators(), (validator, rlp) -> rlp.writeBytes(validator));
-    if (bftExtraData.getVote().isPresent()) {
-      bftExtraData.getVote().get().writeTo(encoder);
-    } else {
-      encoder.writeNull();
-    }
+
+    final List<Vote> vote = bftExtraData.getVote().stream().collect(Collectors.toList());
+    encoder.writeList(vote, Vote::writeTo);
 
     if (encodingType != EncodingType.EXCLUDE_COMMIT_SEALS_AND_ROUND_NUMBER) {
       encoder.writeIntScalar(bftExtraData.getRound());
